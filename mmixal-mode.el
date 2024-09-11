@@ -1,4 +1,4 @@
-;;; qml-mmixal-mode.el --- sample major mode for editing MMIXAL. -*- coding: utf-8; lexical-binding: t; -*-
+;;; mmixal-mode.el --- sample major mode for editing MMIXAL. -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; 05/09/2023 -- 11/09/2023
 ;; MMIXAL Major mode
@@ -104,7 +104,7 @@
 	))
 
 ;;--------Major mode--------
-(define-derived-mode qml-mmixal-mode prog-mode "mmixal"
+(define-derived-mode mmixal-mode prog-mode "mmixal"
   "major mode for MMIXAL"
   (setq-local font-lock-defaults '(mmixal-font-lock-highlights)
 	      indent-tabs-mode t
@@ -116,7 +116,7 @@
 	      syntax-propertize-function mmixal-syntax-propertize-function)
   (run-hooks 'mmixal-mode-hook))
 
-;; set up files ending with .mms to open in qml-mmixal-mode
-(add-to-list 'auto-mode-alist '("\\.mms\\'" . qml-mmixal-mode))
+;; set up files ending with .mms to open in mmixal-mode
+(add-to-list 'auto-mode-alist '("\\.mms\\'" . mmixal-mode))
 
-(provide 'qml-mmixal-mode)
+(provide 'mmixal-mode)
