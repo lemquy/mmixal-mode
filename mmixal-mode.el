@@ -1,4 +1,4 @@
-;;; mmixal-mode.el --- sample major mode for editing MMIXAL. -*- coding: utf-8; lexical-binding: t; -*-
+;;; qml-mmixal-mode.el --- sample major mode for editing MMIXAL. -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; 05/09/2023 -- 11/09/2023
 ;; MMIXAL Major mode
@@ -50,25 +50,26 @@
   "\\(?:\\(?:\"[^\"]+\"\\|'[[:ascii:]]'\\|[^ \t\n,;]+\\),\\)*\\(?:\"[^\"]+\"\\|'[[:ascii:]]'\\|[^ \t\n,;]+\\)"
   "Regex presents operands.")
 
-(defvar mmixal-instruction-normal-form
-  (concat "[[:alnum:]]*[ \t]+[[:alnum:]]+[ \t]+" mmixal-regex-operands "[ \t]*")
+(defvar regex-mmixal-instruction-normal-form
+  (concat "[[:alnum:]_]*[ \t]+[[:alnum:]]+[ \t]+" mmixal-regex-operands "[ \t]*")
   "That is Label OP X,Y,Z.")
 
 (defvar regex-mmixal-first-instruction
-  (concat "^" mmixal-instruction-normal-form)
+  (concat "^" regex-mmixal-instruction-normal-form)
   "This regex specify form of instructions when they begin at ^.")
 
 (defvar regex-mmixal-secondary-instruction
-  (concat ";" mmixal-instruction-normal-form)
+  (concat ";" regex-mmixal-instruction-normal-form)
   "This regex specify form of instructions when they begin follow others on the same line, via ;.")
 
 (defvar regex-mmixal-general-inline-instruction
-  (concat regex-mmixal-first-instruction "\\(?:" regex-mmixal-secondary-instruction "\\)*"))
+  (concat regex-mmixal-first-instruction "\\(?:" regex-mmixal-secondary-instruction "\\)*;?")
+  "This regex specify form of some instructions on the same line.")
 
-(defconst mmixal-syntax-propertize-function
+(defconst mmixal-syntax-propertize-function ;; Regex, fortunenately, tries to match satisfied string as long as possible, which we need to parse the comment.
   (syntax-propertize-rules
-   ("^[ \t]*[^[:alnum:]\t\n_]" (0 "<")) ;; start of comment on a single line
-   ((concat regex-mmixal-general-inline-instruction "\\([ \t]\\)[^ \t\n]") (1 "<")) ;; start of comment after intructions
+   ("^[ \t]*[^[:alnum:] \t\n_]" (0 "<")) ;; start of comment on a single line
+   ((concat regex-mmixal-general-inline-instruction "[ \t]*\\([ \t][^ \t\n]\\|$\\)") (1 "<")) ;; start of comment after intructions
    ("\n" (0 ">")) ;; end of comment
    ))
 
@@ -103,7 +104,7 @@
 	))
 
 ;;--------Major mode--------
-(define-derived-mode mmixal-mode prog-mode "mmixal"
+(define-derived-mode qml-mmixal-mode prog-mode "mmixal"
   "major mode for MMIXAL"
   (setq-local font-lock-defaults '(mmixal-font-lock-highlights)
 	      indent-tabs-mode t
@@ -115,7 +116,7 @@
 	      syntax-propertize-function mmixal-syntax-propertize-function)
   (run-hooks 'mmixal-mode-hook))
 
-;; set up files ending with .mms to open in mmixal-mode
-(add-to-list 'auto-mode-alist '("\\.mms\\'" . mmixal-mode))
+;; set up files ending with .mms to open in qml-mmixal-mode
+(add-to-list 'auto-mode-alist '("\\.mms\\'" . qml-mmixal-mode))
 
-(provide 'mmixal-mode)
+(provide 'qml-mmixal-mode)
