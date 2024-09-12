@@ -2,7 +2,7 @@
 
 ;; 05/09/2023 -- 11/09/2023
 ;; MMIXAL Major mode
-;; Le Minh Quy
+;; Author: Minh Quy Le
 ;; Email: leminhquyht@gmail.com
 
 ;; I have tried to make this mode match Knuth's TAOCP as much as I can.
@@ -10,7 +10,6 @@
 ;; In particular, if `GREG' doesn't have an operand (which is implied 0), a delimiter is neccessary for a comment.
 ;; Secondly, dealing with the case where label names is the same as opcode names.
 ;; In this case, when we use those labels, they would be highlighted same color as opcodes.
-;; Thirdly, the major mode has not yet successfully highlighted indented labeled intructions.
 ;; I will also study how to optimize the code of `mmixal-font-lock-highlights' definition using `mmixal-instruction-normal-form'.
 
 ;; Thanks for mixal-mode.el, xahlee's Emacs tutorial, and Tony Aldon's Youtube video. This major mode would not be able to completed without them.
