@@ -1,2 +1,2 @@
 # mmixal-mode
-mmixal highlight mode for emacs
+mmixal highlight mode for Emacs
