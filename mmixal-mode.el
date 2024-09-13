@@ -1,16 +1,16 @@
 ;;; mmixal-mode.el --- sample major mode for editing MMIXAL. -*- coding: utf-8; lexical-binding: t; -*-
 
 ;; 05/09/2023 -- 11/09/2023
+;; Emacs 29.1
 ;; MMIXAL Major mode
-;; Author: Minh Quy Le
+;; Author: Le Minh Quy
 ;; Email: leminhquyht@gmail.com
 
 ;; I have tried to make this mode match Knuth's TAOCP as much as I can.
-;; There are other cases not solved yet. Firstly, determining comment for `GREG'.
-;; In particular, if `GREG' doesn't have an operand (which is implied 0), a delimiter is neccessary for a comment.
-;; Secondly, dealing with the case where label names is the same as opcode names.
-;; In this case, when we use those labels, they would be highlighted same color as opcodes.
-;; I will also study how to optimize the code of `mmixal-font-lock-highlights' definition using `mmixal-instruction-normal-form'.
+;; There is one cases not solved yet: Dealing with the case where label names is the same as opcode names.
+;; In this case, when we use those labels, they would be highlighted same color as opcodes. I hope that noone do that.
+
+;; 13/09/2023 Updating the feature determining comment when an opcode has no operands such as `GREG' and `TRAP'.
 
 ;; Thanks for mixal-mode.el, xahlee's Emacs tutorial, and Tony Aldon's Youtube video. This major mode would not be able to completed without them.
 
@@ -20,7 +20,22 @@
 
 ;;-----------------MMIX "keywords"-----------------
 (defvar mmix-opcodes
-  '("2ADDU" "2ADDUI" "4ADDU" "4ADDUI" "8ADDU" "8ADDUI" "16ADDU" "16ADDUI" "ADD" "ADDI" "ADDU" "ADDUI" "AND" "ANDI" "ANDN" "ANDNH" "ANDNI" "ANDNL" "ANDNMH" "ANDNML" "BDIF" "BDIFI" "BEV" "BEVB" "BN" "BNB" "BNN" "BNNB" "BNP" "BNPB" "BNZ" "BNZB" "BOD" "BODB" "BP" "BPB" "BZ" "BZB" "CMP" "CMPI" "CMPU" "CMPUI" "CSEV" "CSEVI" "CSN" "CSNI" "CSNN" "CSNNI" "CSNP" "CSNPI" "CSNZ" "CSNZI" "CSOD" "CSODI" "CSP" "CSPI" "CSWAP" "CSWAPI" "CSZ" "CSZI" "DIV" "DIVI" "DIVU" "DIVUI" "FADD" "FCMP" "FCMPE" "FDIV" "FEQL" "FEQLE" "FINT" "FIX" "FIXU" "FLOT" "FLOTI" "FLOTU" "FLOTUI" "FMUL" "FREM" "FSQRT" "FSUB" "FUN" "FUNE" "GET" "GETA" "GETAB" "GO" "GOI" "INCH" "INCL" "INCMH" "INCML" "JMP" "JMPB" "LDB" "LDBI" "LDBU" "LDBUI" "LDHT" "LDHTI" "LDO" "LDOI" "LDOU" "LDUNC" "LDUNCI" "LDOUI" "LDSF" "LDSFI" "LDT" "LDTI" "LDTU" "LDTUI" "LDVTS" "LDVTSI" "LDW" "LDWI" "LDWU" "LDWUI" "MOR" "MORI" "MUL" "MULI" "MULU" "MULUI" "MUX" "MUXI" "MXOR" "MXORI" "NAND" "NANDI" "NEG" "NEGI" "NEGU" "NEGUI" "NOR" "NORI" "NXOR" "NXORI" "ODIF" "ODIFI" "OR" "ORH" "ORI" "ORL" "ORMH" "ORML" "ORN" "ORNI" "PBEV" "PBEVB" "PBN" "PBNB" "PBNN" "PBNNB" "PBNP" "PBNPB" "PBNZ" "PBNZB" "PBOD" "PBODB" "PBP" "PBPB" "PBZ" "PBZB" "POP" "PREGO" "PREGOI" "PRELD" "PRELDI" "PREST" "PRESTI" "PUSHGO" "PUSHGOI" "PUSHJ" "PUSHJB" "PUT" "PUTI" "RESUME" "SADD" "SADDI" "SAVE" "SETH" "SETL" "SETMH" "SETML" "SFLOT" "SFLOTI" "SFLOTU" "SFLOTUI" "SL" "SLI" "SLU" "SLUI" "SR" "SRI" "SRU" "SRUI" "STB" "STBI" "STBU" "STBUI" "STCO" "STCOI" "STHT" "STHTI" "STO" "STOI" "STOU" "STUNC" "STUNCI" "STOUI" "STSF" "STSFI" "STT" "STTI" "STTU" "STTUI" "STW" "STWI" "STWU" "STWUI" "SUB" "SUBI" "SUBU" "SUBUI" "SWYM" "SYNC" "SYNCD" "SYNCDI" "SYNCID" "SYNCIDI" "TDIF" "TDIFI" "TRAP" "TRIP" "UNSAVE" "WDIF" "WDIFI" "XOR" "XORI" "ZSEV" "ZSEVI" "ZSN" "ZSNI" "ZSNN" "ZSNNI" "ZSNP" "ZSNPI" "ZSNZ" "ZSNZI" "ZSOD" "ZSODI" "ZSP" "ZSPI" "ZSZ" "ZSZI" "LDA" "SET")
+  '("2ADDU" "2ADDUI" "4ADDU" "4ADDUI" "8ADDU" "8ADDUI" "16ADDU" "16ADDUI" "ADD" "ADDI" "ADDU" "ADDUI" "AND" "ANDI" "ANDN" "ANDNH"
+    "ANDNI" "ANDNL" "ANDNMH" "ANDNML" "BDIF" "BDIFI" "BEV" "BEVB" "BN" "BNB" "BNN" "BNNB" "BNP" "BNPB" "BNZ" "BNZB"
+    "BOD" "BODB" "BP" "BPB" "BZ" "BZB" "CMP" "CMPI" "CMPU" "CMPUI" "CSEV" "CSEVI" "CSN" "CSNI" "CSNN" "CSNNI"
+    "CSNP" "CSNPI" "CSNZ" "CSNZI" "CSOD" "CSODI" "CSP" "CSPI" "CSWAP" "CSWAPI" "CSZ" "CSZI" "DIV" "DIVI" "DIVU" "DIVUI"
+    "FADD" "FCMP" "FCMPE" "FDIV" "FEQL" "FEQLE" "FINT" "FIX" "FIXU" "FLOT" "FLOTI" "FLOTU" "FLOTUI" "FMUL" "FREM" "FSQRT"
+    "FSUB" "FUN" "FUNE" "GET" "GETA" "GETAB" "GO" "GOI" "INCH" "INCL" "INCMH" "INCML" "JMP" "JMPB" "LDB" "LDBI"
+    "LDBU" "LDBUI" "LDHT" "LDHTI" "LDO" "LDOI" "LDOU" "LDUNC" "LDUNCI" "LDOUI" "LDSF" "LDSFI" "LDT" "LDTI" "LDTU" "LDTUI"
+    "LDVTS" "LDVTSI" "LDW" "LDWI" "LDWU" "LDWUI" "MOR" "MORI" "MUL" "MULI" "MULU" "MULUI" "MUX" "MUXI" "MXOR" "MXORI"
+    "NAND" "NANDI" "NEG" "NEGI" "NEGU" "NEGUI" "NOR" "NORI" "NXOR" "NXORI" "ODIF" "ODIFI" "OR" "ORH" "ORI" "ORL"
+    "ORMH" "ORML" "ORN" "ORNI" "PBEV" "PBEVB" "PBN" "PBNB" "PBNN" "PBNNB" "PBNP" "PBNPB" "PBNZ" "PBNZB" "PBOD" "PBODB"
+    "PBP" "PBPB" "PBZ" "PBZB" "POP" "PREGO" "PREGOI" "PRELD" "PRELDI" "PREST" "PRESTI" "PUSHGO" "PUSHGOI" "PUSHJ" "PUSHJB" "PUT"
+    "PUTI" "RESUME" "SADD" "SADDI" "SAVE" "SETH" "SETL" "SETMH" "SETML" "SFLOT" "SFLOTI" "SFLOTU" "SFLOTUI" "SL" "SLI" "SLU"
+    "SLUI" "SR" "SRI" "SRU" "SRUI" "STB" "STBI" "STBU" "STBUI" "STCO" "STCOI" "STHT" "STHTI" "STO" "STOI" "STOU"
+    "STUNC" "STUNCI" "STOUI" "STSF" "STSFI" "STT" "STTI" "STTU" "STTUI" "STW" "STWI" "STWU" "STWUI" "SUB" "SUBI" "SUBU"
+    "SUBUI" "SWYM" "SYNC" "SYNCD" "SYNCDI" "SYNCID" "SYNCIDI" "TDIF" "TDIFI" "TRAP" "TRIP" "UNSAVE" "WDIF" "WDIFI" "XOR" "XORI"
+    "ZSEV" "ZSEVI" "ZSN" "ZSNI" "ZSNN" "ZSNNI" "ZSNP" "ZSNPI" "ZSNZ" "ZSNZI" "ZSOD" "ZSODI" "ZSP" "ZSPI" "ZSZ" "ZSZI" "LDA" "SET")
   "MMIX opcodes collected from Knuth's website.")
 
 (defvar mmixal-pseudoinstructions
@@ -32,7 +47,9 @@
   "Symbols defined for special uses such TRAP, I/O, etc. collected from Knuth's TAOCP Volume 1, Fascicle 1.")
 
 (defvar mmix-special-registers
-  '("rJ" "rA" "rB" "rC" "rD" "rE" "rF" "rG" "rH" "rI" "rK" "rL" "rM" "rN" "rO" "rP" "rQ" "rR" "rS" "rT" "rU" "rV" "rW" "rX" "rY" "rZ" "rBB" "rTT" "rWW" "rXX" "rYY" "rZZ")
+  '("rJ" "rA" "rB" "rC" "rD" "rE" "rF" "rG" "rH" "rI" "rK" "rL" "rM"
+    "rN" "rO" "rP" "rQ" "rR" "rS" "rT" "rU" "rV" "rW" "rX" "rY" "rZ"
+    "rBB" "rTT" "rWW" "rXX" "rYY" "rZZ")
   "Special registers in MMIX collected from Knuth's website.")
 
 (defvar mmix-registers
@@ -44,32 +61,33 @@
 ;;--------MMIXAL hook--------
 (defvar mmixal-mode-hook nil "Hook for function `mmixal-mode'.")
 
-;;--------REGEX for instructions--------
+;;--------MMIXAL Instruction regex--------
 (defvar mmixal-regex-operands
-  "\\(?:\\(?:\"[^\"]+\"\\|'[[:ascii:]]'\\|[^ \t\n,;]+\\),\\)*\\(?:\"[^\"]+\"\\|'[[:ascii:]]'\\|[^ \t\n,;]+\\)"
-  "Regex presents operands.")
+  "\\(?:[ \t]+\\(?:\\(?:\"[^\"]+\"\\|'[[:ascii:]]'\\|[[:alnum:]_#@$][^ \t\n,;]*\\),\\)*\\(?:\"[^\"]+\"\\|'[[:ascii:]]'\\|[[:alnum:]_#@$][^ \t\n,;]*\\)\\)?"
+  "Regex presents operands including X,Y,Z and X,YZ and XYZ and nothing.")
 
 (defvar regex-mmixal-instruction-normal-form
-  (concat "[[:alnum:]_]*[ \t]+[[:alnum:]]+[ \t]+" mmixal-regex-operands "[ \t]*")
-  "That is Label OP X,Y,Z.")
+  (concat "[[:alnum:]_]*[ \t]+[[:alnum:]]+" mmixal-regex-operands "[ \t]*")
+  "That is `Label OP X,Y,Z' or `Label OP X,YZ' or `Label OP XYZ' or `Label OP'.")
 
 (defvar regex-mmixal-first-instruction
   (concat "^" regex-mmixal-instruction-normal-form)
-  "This regex specify form of instructions when they begin at ^.")
+  "This regex specify form of instruction at the beginning of a line.")
 
 (defvar regex-mmixal-secondary-instruction
   (concat ";" regex-mmixal-instruction-normal-form)
-  "This regex specify form of instructions when they begin follow others on the same line, via ;.")
+  "This regex specify form of instructions when they begin follow others on the same line, separated by `;'s.")
 
 (defvar regex-mmixal-general-inline-instruction
-  (concat regex-mmixal-first-instruction "\\(?:" regex-mmixal-secondary-instruction "\\)*;?")
-  "This regex specify form of some instructions on the same line.")
+  (concat regex-mmixal-first-instruction "\\(?:" regex-mmixal-secondary-instruction "\\)*")
+  "This regex specify form of some instructions on the same line, i.e. Label OP X,Y,Z ; Label OP X,Y,Z; etc.")
 
-(defconst mmixal-syntax-propertize-function ;; Regex, fortunenately, tries to match satisfied string as long as possible, which we need to parse the comment.
+(defconst mmixal-syntax-propertize-function
+  ;; Regex, fortunenately, tries to match satisfied string as long as possible, which we need to parse the comment.
   (syntax-propertize-rules
-   ("^[ \t]*[^[:alnum:] \t\n_]" (0 "<")) ;; start of comment on a single line
-   ((concat regex-mmixal-general-inline-instruction "[ \t]*\\([ \t][^ \t\n]\\|$\\)") (1 "<")) ;; start of comment after intructions
-   ("\n" (0 ">")) ;; end of comment
+   ("\\(?:^\\|;\\)[ \t]*\\([^[:alnum:]_ \t\n]\\)" (1 "<")) ;; start of a comment on a single line
+   ((concat regex-mmixal-general-inline-instruction "\\([^ \t\n;]?\\)") (1 "<")) ;; start of a comment follow intructions
+   ("\n" (0 ">")) ;; end of the comment
    ))
 
 ;;--------set up font for keywords--------
